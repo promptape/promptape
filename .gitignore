@@ -1,0 +1,6 @@
+/promptape
+/dist/
+*.test
+*.out
+__pycache__/
+.venv/

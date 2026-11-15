@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"sort"
 	"strconv"
 	"strings"
@@ -25,7 +26,17 @@ import (
 )
 
 // version is overridden at build time with -ldflags "-X main.version=...".
+// Builds made with `go install ...@vX.Y.Z` fall back to the module version.
 var version = "dev"
+
+func init() {
+	if version != "dev" {
+		return
+	}
+	if info, ok := debug.ReadBuildInfo(); ok && info.Main.Version != "" && info.Main.Version != "(devel)" {
+		version = info.Main.Version
+	}
+}
 
 const usage = `promptape — record your LLM API calls once, replay them forever.
 

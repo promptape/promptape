@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Promptape · pay for every AI answer once</title>
+<meta name="description" content="Promptape records the real answers your app gets from OpenAI and Anthropic the first time, then plays them back in your tests: free, instant, the same every time, and offline. Open source.">
+<meta property="og:title" content="Promptape · pay for every AI answer once">
+<meta property="og:description" content="Record your AI API calls once. Replay them in your tests for free, forever.">
+<meta name="theme-color" content="#3340FF">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 44'%3E%3Crect width='64' height='44' rx='9' fill='%233340FF'/%3E%3Ccircle cx='19' cy='20' r='9' fill='%23fff'/%3E%3Ccircle cx='45' cy='20' r='9' fill='%23fff'/%3E%3Ccircle cx='19' cy='20' r='4' fill='%2317183B'/%3E%3Ccircle cx='45' cy='20' r='4' fill='%2317183B'/%3E%3Crect x='24' y='33' width='16' height='5' rx='2.5' fill='%23FF5B45'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Figtree:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #F4F6FF;
+  --white: #FFFFFF;
+  --ink: #17183B;
+  --ink-2: #4B4E78;
+  --line: #D9DDF5;
+  --blue: #3340FF;
+  --blue-deep: #2229C9;
+  --tomato: #FF5B45;
+  --mint: #2ED19A;
+  --sun: #FFCB3D;
+  --display: "Bagel Fat One", "Arial Rounded MT Bold", system-ui, sans-serif;
+  --sans: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --wrap: 1160px;
+  --gutter: clamp(16px, 4vw, 40px);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 400 18px/1.6 var(--sans); -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+img, svg { display: block; }
+:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; border-radius: 8px; }
+.wrap { max-width: var(--wrap); margin: 0 auto; padding: 0 var(--gutter); }
+code, pre { font-family: var(--mono); }
+p code, li code { font-size: .86em; background: #E6E9FF; padding: .1em .35em; border-radius: 6px; }
+h1, h2, h3 { margin: 0; }
+h2 { font-family: var(--display); font-weight: 400; font-size: clamp(36px, 5vw, 60px); line-height: 1.02; letter-spacing: -0.01em; }
+.lead { font-size: clamp(18px, 1.7vw, 21px); color: var(--ink-2); max-width: 36em; margin: 16px 0 0; }
+section { padding: clamp(64px, 9vw, 120px) 0; }
+
+/* ---------- nav ---------- */
+.nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 76px; }
+.logo { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-size: 24px; text-decoration: none; }
+.logo svg { width: 40px; height: 28px; }
+.nav nav { display: flex; align-items: center; gap: clamp(12px, 3vw, 28px); font-weight: 600; font-size: 16px; }
+.nav nav a { text-decoration: none; }
+.nav nav a:hover { color: var(--blue); }
+.gh { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 999px; background: var(--ink); color: var(--white) !important; }
+.gh:hover { background: var(--blue); }
+.gh svg { width: 18px; height: 18px; }
+
+/* ---------- hero ---------- */
+.hero { padding: clamp(24px, 5vw, 64px) 0 clamp(64px, 8vw, 104px); overflow: hidden; }
+.hero .wrap { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: clamp(24px, 4vw, 56px); align-items: center; }
+.hero h1 { font-family: var(--display); font-weight: 400; font-size: clamp(54px, 8.2vw, 116px); line-height: .92; letter-spacing: -0.015em; }
+.hero h1 .l2 { display: block; color: var(--blue); }
+.hero .lead { margin-top: 26px; color: var(--ink); max-width: 30em; }
+.hero .lead strong { font-weight: 700; }
+.cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; align-items: center; }
+.install { display: flex; align-items: center; max-width: 100%; background: var(--ink); color: var(--white); border-radius: 16px; padding: 6px 6px 6px 18px; gap: 12px; box-shadow: 0 6px 0 var(--blue); }
+.install code { font-size: 14px; white-space: nowrap; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+.install code::-webkit-scrollbar { display: none; }
+.install code span { color: var(--sun); }
+.copy { flex: none; border: 0; border-radius: 11px; background: var(--sun); color: var(--ink); font: 700 15px var(--sans); padding: 10px 16px; cursor: pointer; }
+.copy:hover { background: var(--white); }
+.ghost { font-weight: 700; text-decoration: none; padding: 10px 6px; border-bottom: 3px solid var(--sun); }
+.ghost:hover { color: var(--blue); }
+.small-print { margin-top: 18px; font-size: 15px; color: var(--ink-2); }
+
+/* the mascot */
+.mascot-stage { position: relative; display: grid; place-items: center; padding: 78px 0 10px; }
+.mascot { width: min(100%, 440px); height: auto; overflow: visible; filter: drop-shadow(0 22px 0 rgba(51, 64, 255, .18)); transform: rotate(-4deg); }
+.bubble {
+  position: absolute; top: 0; right: 4%; z-index: 2;
+  background: var(--white); border: 3px solid var(--ink); border-radius: 22px; padding: 10px 18px;
+  font-weight: 800; font-size: clamp(15px, 1.6vw, 18px); line-height: 1.25; max-width: 15em; transform: rotate(3deg);
+}
+.bubble::after { content: ""; position: absolute; left: 28px; bottom: -14px; width: 22px; height: 22px; background: var(--white); border-right: 3px solid var(--ink); border-bottom: 3px solid var(--ink); transform: rotate(45deg) skew(10deg, 10deg); }
+.pupil { transition: transform .12s ease-out; }
+.blink { transform-box: fill-box; transform-origin: center; animation: blink 5.5s infinite; }
+@keyframes blink { 0%, 95%, 100% { transform: scaleY(1); } 97% { transform: scaleY(.08); } }
+
+/* ---------- the idea (diagram) ---------- */
+.idea { background: var(--blue); color: var(--white); border-radius: clamp(28px, 4vw, 48px); margin: 0 clamp(8px, 1.5vw, 20px); }
+.idea h2 { color: var(--white); }
+.idea .lead { color: #D9DCFF; }
+.tabs { display: inline-flex; gap: 6px; padding: 6px; background: var(--blue-deep); border-radius: 999px; margin-top: 36px; }
+.tab { border: 0; border-radius: 999px; padding: 12px 22px; font: 800 17px var(--sans); color: #D9DCFF; background: transparent; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; }
+.tab .ico { width: 13px; height: 13px; border-radius: 50%; background: var(--tomato); }
+.tab .ico.tri { border-radius: 0; width: 0; height: 0; background: none; border-left: 12px solid var(--mint); border-top: 7px solid transparent; border-bottom: 7px solid transparent; }
+.tab[aria-selected="true"] { background: var(--white); color: var(--ink); }
+.stage { margin-top: 28px; background: var(--blue-deep); border-radius: 28px; padding: clamp(18px, 3vw, 34px); }
+.lane { display: grid; grid-template-columns: 1fr 1.25fr 1fr; align-items: center; gap: 0; position: relative; }
+.node { display: grid; justify-items: center; gap: 10px; text-align: center; position: relative; z-index: 1; }
+.node .card { width: clamp(84px, 11vw, 132px); aspect-ratio: 1; border-radius: 26px; background: var(--white); display: grid; place-items: center; color: var(--ink); }
+.node .card svg { width: 58%; height: auto; }
+.node b { font-weight: 800; font-size: 16px; }
+.node small { display: block; font-size: 14px; color: #C8CCFF; line-height: 1.35; }
+.node.cloud .card { background: var(--paper); }
+.node.cloud.asleep .card { opacity: .35; }
+.node.tape .card { width: clamp(120px, 15vw, 180px); aspect-ratio: 1.45; background: transparent; }
+.node.tape .card svg { width: 100%; }
+.wire { position: absolute; top: calc(clamp(84px, 11vw, 132px) / 2); height: 4px; background: repeating-linear-gradient(90deg, rgba(255,255,255,.45) 0 10px, transparent 10px 18px); }
+.wire.w1 { left: 16%; right: 58%; }
+.wire.w2 { left: 58%; right: 16%; }
+.stage[data-run="after"] .wire.w2 { opacity: .25; }
+.packet { position: absolute; top: calc(clamp(84px, 11vw, 132px) / 2 - 11px); left: 16%; width: 26px; height: 26px; border-radius: 50%; background: var(--sun); box-shadow: 0 0 0 5px rgba(255, 203, 61, .3); z-index: 2; opacity: 0; }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 28px; }
+.stat { background: var(--blue); border-radius: 18px; padding: 14px 16px; }
+.stat small { display: block; font-size: 14px; color: #C8CCFF; font-weight: 600; }
+.stat output { display: block; font-family: var(--display); font-size: clamp(24px, 2.6vw, 34px); line-height: 1.1; margin-top: 4px; }
+.stat.money output { color: var(--sun); }
+.caption { margin: 18px 0 0; font-size: 17px; color: var(--white); max-width: 46em; }
+.caption small { display: block; margin-top: 6px; color: #B7BCFF; font-size: 14px; }
+
+/* ---------- compare ---------- */
+.compare { margin-top: 44px; border-radius: 26px; background: var(--white); overflow: hidden; border: 3px solid var(--ink); }
+.row { display: grid; grid-template-columns: 1.1fr 1fr 1fr; border-top: 2px solid var(--line); }
+.row:first-child { border-top: 0; }
+.row > div { padding: 18px 22px; }
+.row.head { background: var(--ink); color: var(--white); font-weight: 800; }
+.row.head div:nth-child(3) { color: var(--mint); }
+.row .q { font-weight: 700; }
+.row .bad { color: var(--ink-2); }
+.row .good { font-weight: 800; color: #0E8F63; background: #EAFBF4; }
+.mark { display: inline-block; width: 22px; text-align: center; font-weight: 800; margin-right: 6px; }
+
+/* ---------- steps ---------- */
+.steps { display: grid; gap: 22px; margin-top: 44px; }
+.step { display: grid; grid-template-columns: 76px minmax(0, .9fr) minmax(0, 1.3fr); gap: 22px; align-items: center; background: var(--white); border-radius: 26px; padding: 22px; border: 2px solid var(--line); }
+.num { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; font-family: var(--display); font-size: 32px; color: var(--white); }
+.step:nth-child(1) .num { background: var(--blue); }
+.step:nth-child(2) .num { background: var(--tomato); }
+.step:nth-child(3) .num { background: var(--mint); color: var(--ink); }
+.step h3 { font-size: 22px; font-weight: 800; line-height: 1.25; }
+.step p { margin: 6px 0 0; color: var(--ink-2); font-size: 17px; }
+pre { margin: 0; background: var(--ink); color: #E6E8FF; border-radius: 16px; padding: 16px 18px; font-size: 13.5px; line-height: 1.7; overflow-x: auto; }
+pre .c { color: #8B8FC0; } pre .k { color: var(--sun); } pre .s { color: #9FD9FF; } pre .g { color: var(--mint); } pre .r { color: #FF8B7D; }
+
+/* ---------- stickers ---------- */
+.stickers { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 44px; }
+.sticker { flex: 1 1 260px; max-width: 360px; border-radius: 24px; padding: 22px 22px 24px; border: 3px solid var(--ink); background: var(--white); }
+.sticker:nth-child(6n+1) { background: #FFF1C7; transform: rotate(-1.4deg); }
+.sticker:nth-child(6n+2) { background: #E3E6FF; transform: rotate(1deg); }
+.sticker:nth-child(6n+3) { background: #DDF8EC; transform: rotate(-.6deg); }
+.sticker:nth-child(6n+4) { background: #FFE2DD; transform: rotate(1.3deg); }
+.sticker:nth-child(6n+5) { background: var(--white); transform: rotate(-1deg); }
+.sticker:nth-child(6n+6) { background: #FFF1C7; transform: rotate(.8deg); }
+.sticker h3 { font-family: var(--display); font-weight: 400; font-size: 26px; line-height: 1.05; }
+.sticker p { margin: 10px 0 0; font-size: 17px; color: var(--ink-2); }
+
+/* ---------- tape file ---------- */
+.tapefile { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: clamp(24px, 4vw, 56px); align-items: center; }
+.tapefile pre { font-size: 12.5px; }
+
+/* ---------- modes ---------- */
+.keys { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 40px; }
+.key { border: 3px solid var(--ink); border-radius: 22px; background: var(--white); padding: 18px 14px 16px; cursor: pointer; font: inherit; color: var(--ink); text-align: left; box-shadow: 0 7px 0 var(--ink); transition: transform .08s, box-shadow .08s; display: grid; gap: 10px; }
+.key:hover { background: #F9FAFF; }
+.key[aria-selected="true"] { transform: translateY(5px); box-shadow: 0 2px 0 var(--ink); background: #FFF1C7; }
+.key .sym { height: 24px; display: flex; gap: 4px; align-items: center; }
+.s-dot { width: 20px; height: 20px; border-radius: 50%; background: var(--tomato); }
+.s-tri { width: 0; height: 0; border-left: 18px solid var(--mint); border-top: 11px solid transparent; border-bottom: 11px solid transparent; }
+.s-tri.ink { border-left-color: var(--ink); }
+.key b { font-family: var(--mono); font-weight: 500; font-size: 17px; }
+.key span { font-size: 14px; color: var(--ink-2); font-weight: 600; line-height: 1.3; }
+.mode-panel { margin-top: 26px; background: var(--white); border-radius: 22px; border: 2px solid var(--line); padding: 22px 24px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; align-items: center; }
+.mode-panel h3 { font-size: 22px; font-weight: 800; }
+.mode-panel p { margin: 6px 0 0; color: var(--ink-2); font-size: 17px; }
+
+/* ---------- honest ---------- */
+.honest { background: var(--ink); color: var(--white); border-radius: clamp(28px, 4vw, 48px); margin: 0 clamp(8px, 1.5vw, 20px); }
+.honest h2 { color: var(--white); }
+.honest .lead { color: #C3C6EA; }
+.road { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 44px; }
+.stop { border-radius: 22px; padding: 20px; background: #24264F; }
+.stop.now { background: var(--mint); color: var(--ink); }
+.stop h3 { font-family: var(--display); font-weight: 400; font-size: 30px; }
+.stop .when { display: inline-block; margin-top: 4px; font-size: 13px; font-weight: 800; padding: 2px 10px; border-radius: 999px; background: rgba(255,255,255,.12); }
+.stop.now .when { background: rgba(23,24,59,.12); }
+.stop p { margin: 10px 0 0; font-size: 16px; line-height: 1.5; color: #C3C6EA; }
+.stop.now p { color: var(--ink); }
+.limits { margin-top: 36px; font-size: 17px; color: #C3C6EA; max-width: 50em; }
+.limits strong { color: var(--white); }
+.honest code { background: #2E3163; color: var(--white); }
+
+/* ---------- closing ---------- */
+.closing { text-align: center; }
+.closing h2 { font-size: clamp(42px, 7vw, 96px); max-width: 12em; margin: 0 auto; }
+.closing .mini { width: 120px; margin: 0 auto 26px; transform: rotate(6deg); }
+.closing .cta-row { justify-content: center; }
+.btn { display: inline-flex; align-items: center; gap: 10px; padding: 16px 24px; border-radius: 16px; font-weight: 800; text-decoration: none; font-size: 18px; border: 3px solid var(--ink); }
+.btn.primary { background: var(--blue); color: var(--white); box-shadow: 0 6px 0 var(--ink); }
+.btn.primary:hover { background: var(--blue-deep); }
+.btn.second { background: var(--white); box-shadow: 0 6px 0 var(--ink); }
+.btn:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--ink); }
+footer { padding: 28px 0 40px; font-size: 15px; color: var(--ink-2); }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; border-top: 2px solid var(--line); padding-top: 22px; }
+
+/* ---------- responsive ---------- */
+@media (max-width: 960px) {
+  .hero .wrap, .tapefile { grid-template-columns: minmax(0, 1fr); }
+  .mascot-stage { max-width: 420px; margin: 0 auto; }
+  .stats, .keys, .road { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .step { grid-template-columns: 64px minmax(0, 1fr); }
+  .step pre { grid-column: 1 / -1; }
+  .mode-panel { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 700px) {
+  body { font-size: 17px; }
+  .nav .hide-sm { display: none; }
+  .lane { grid-template-columns: 1fr 1.3fr 1fr; }
+  .node small { display: none; }
+  .node b { font-size: 14px; }
+  .row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .row .q { grid-column: 1 / -1; padding-bottom: 0; }
+  .row.head .q { display: none; }
+  .row > div { padding: 12px 16px; }
+  .tabs { display: flex; }
+  .tab { flex: 1; justify-content: center; padding: 12px 10px; font-size: 15px; }
+}
+@media (max-width: 480px) {
+  .keys, .road { grid-template-columns: minmax(0, 1fr); }
+  .stat { padding: 12px 14px; }
+  .stat small { font-size: 13px; }
+  .install code { font-size: 12px; }
+  .bubble { right: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .blink { animation: none; }
+  .pupil, .key { transition: none; }
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="tapey" viewBox="0 0 320 220">
+      <rect x="6" y="6" width="308" height="208" rx="30" fill="#3340FF" stroke="#17183B" stroke-width="8"/>
+      <rect x="34" y="28" width="252" height="40" rx="12" fill="#FFFFFF" stroke="#17183B" stroke-width="5"/>
+      <rect x="34" y="28" width="30" height="40" rx="10" fill="#FF5B45"/>
+      <rect x="54" y="28" width="16" height="40" fill="#FFCB3D"/>
+      <text x="84" y="57" font-family="Bagel Fat One, sans-serif" font-size="25" fill="#17183B">promptape</text>
+      <rect x="112" y="166" width="96" height="30" rx="15" fill="#17183B"/>
+      <rect x="124" y="176" width="72" height="10" rx="5" fill="#FF5B45"/>
+      <circle cx="44" cy="190" r="7" fill="#17183B"/>
+      <circle cx="276" cy="190" r="7" fill="#17183B"/>
+    </symbol>
+  </defs>
+</svg>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="#top" aria-label="Promptape home">
+      <svg viewBox="0 0 64 44" aria-hidden="true"><rect width="64" height="44" rx="10" fill="#3340FF"/><circle cx="19" cy="20" r="9" fill="#fff"/><circle cx="45" cy="20" r="9" fill="#fff"/><circle cx="19" cy="20" r="4" fill="#17183B"/><circle cx="45" cy="20" r="4" fill="#17183B"/><rect x="24" y="33" width="16" height="5" rx="2.5" fill="#FF5B45"/></svg>
+      promptape
+    </a>
+    <nav aria-label="Main">
+      <a class="hide-sm" href="#idea">How it works</a>
+      <a class="hide-sm" href="#start">Get started</a>
+      <a class="gh" href="https://github.com/promptape/promptape">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+<section class="hero" aria-labelledby="h1">
+  <div class="wrap">
+    <div>
+      <h1 id="h1">Pay for every AI answer <span class="l2">only once.</span></h1>
+      <p class="lead">Your app's tests call OpenAI or Claude, so every test run <strong>costs money, takes ages, and gets a slightly different answer</strong>. Promptape records the real answers the first time, then plays them back: <strong>free, instant, and the same every time.</strong></p>
+      <div class="cta-row">
+        <div class="install">
+          <code><span>$</span> go install github.com/promptape/promptape/cmd/promptape@latest</code>
+          <button class="copy" type="button" data-copy="go install github.com/promptape/promptape/cmd/promptape@latest">Copy</button>
+        </div>
+        <a class="ghost" href="#idea">See how it works</a>
+      </div>
+      <p class="small-print">Open source (MIT). One small program, no account, nothing to sign up for.</p>
+    </div>
+    <div class="mascot-stage">
+      <div class="bubble" id="bubble">I'll remember that answer for you.</div>
+      <svg class="mascot" id="mascot" viewBox="0 0 320 220" role="img" aria-label="Tapey, the Promptape cassette, looking at you">
+        <use href="#tapey"/>
+        <g class="blink">
+          <circle cx="98" cy="118" r="38" fill="#FFFFFF" stroke="#17183B" stroke-width="7"/>
+          <circle cx="222" cy="118" r="38" fill="#FFFFFF" stroke="#17183B" stroke-width="7"/>
+        </g>
+        <g class="pupil" id="pupil-l"><circle cx="98" cy="118" r="17" fill="#17183B"/><g fill="#FFFFFF"><rect x="95" y="104" width="6" height="8" rx="2"/><rect x="95" y="124" width="6" height="8" rx="2"/><rect x="84" y="115" width="8" height="6" rx="2"/><rect x="104" y="115" width="8" height="6" rx="2"/></g></g>
+        <g class="pupil" id="pupil-r"><circle cx="222" cy="118" r="17" fill="#17183B"/><g fill="#FFFFFF"><rect x="219" y="104" width="6" height="8" rx="2"/><rect x="219" y="124" width="6" height="8" rx="2"/><rect x="208" y="115" width="8" height="6" rx="2"/><rect x="228" y="115" width="8" height="6" rx="2"/></g></g>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section class="idea" id="idea" aria-labelledby="idea-title">
+  <div class="wrap">
+    <h2 id="idea-title">The whole idea, in one picture</h2>
+    <p class="lead">Promptape sits between your code and the AI company. Pick a run to see what happens to a test suite with 40 AI calls.</p>
+    <div class="tabs" role="tablist" aria-label="Choose a run">
+      <button class="tab" role="tab" id="tab-first" aria-selected="true" aria-controls="stage"><span class="ico"></span>First run</button>
+      <button class="tab" role="tab" id="tab-after" aria-selected="false" aria-controls="stage"><span class="ico tri"></span>Every run after</button>
+    </div>
+    <div class="stage" id="stage" role="tabpanel" data-run="first" aria-labelledby="tab-first">
+      <div class="lane" id="lane">
+        <div class="wire w1"></div><div class="wire w2"></div>
+        <div class="packet" id="packet"></div>
+        <div class="node">
+          <div class="card"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M18 6h12M20 6v12L9 38a4 4 0 003.5 6h23a4 4 0 003.5-6L28 18V6" fill="none" stroke="#17183B" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/><path d="M13 32h22" stroke="#FF5B45" stroke-width="4" stroke-linecap="round"/></svg></div>
+          <div><b>Your tests</b><small>pytest, Jest, anything</small></div>
+        </div>
+        <div class="node tape">
+          <div class="card"><svg viewBox="0 0 320 220" aria-hidden="true"><use href="#tapey"/><circle cx="98" cy="118" r="38" fill="#fff" stroke="#17183B" stroke-width="7"/><circle cx="222" cy="118" r="38" fill="#fff" stroke="#17183B" stroke-width="7"/><circle cx="98" cy="118" r="17" fill="#17183B"/><circle cx="222" cy="118" r="17" fill="#17183B"/></svg></div>
+          <div><b>Promptape</b><small id="tape-note">writes the answer onto a tape</small></div>
+        </div>
+        <div class="node cloud" id="cloud">
+          <div class="card"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 36h22a8 8 0 001-15.9A11 11 0 0016 17a9 9 0 00-2 19z" fill="#E6E9FF" stroke="#17183B" stroke-width="4" stroke-linejoin="round"/><path d="M21 27h7" stroke="#3340FF" stroke-width="4" stroke-linecap="round"/></svg></div>
+          <div><b>The AI API</b><small id="cloud-note">OpenAI or Anthropic</small></div>
+        </div>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat money"><small>Cost of the run</small><output id="s-cost">$0.43</output></div>
+        <div class="stat"><small>Waiting time</small><output id="s-time">76 s</output></div>
+        <div class="stat"><small>Same answers as last time?</small><output id="s-same">Not always</output></div>
+        <div class="stat"><small>Needs internet and a key</small><output id="s-net">Yes</output></div>
+      </div>
+      <p class="caption" id="caption">The first time, each call really goes to the AI company. Promptape passes the answer back to your test and keeps a copy on tape.
+        <small>Example: 40 calls to Claude Opus 5.5, each sending about 900 words and getting about 220 back (1,200 and 300 tokens), at list price. Your numbers depend on your app.</small></p>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="cmp-title">
+  <div class="wrap">
+    <h2 id="cmp-title">Without it, and with it</h2>
+    <p class="lead">Nothing about your app changes. Your tests just stop paying, waiting and wobbling.</p>
+    <div class="compare" role="table" aria-label="Comparison">
+      <div class="row head" role="row"><div class="q" role="columnheader">For every test run</div><div role="columnheader">Calling the API directly</div><div role="columnheader">With Promptape</div></div>
+      <div class="row" role="row"><div class="q" role="cell">What it costs</div><div class="bad" role="cell">The full API price, again</div><div class="good" role="cell"><span class="mark">✓</span>$0 after the first run</div></div>
+      <div class="row" role="row"><div class="q" role="cell">How long you wait</div><div class="bad" role="cell">Seconds per call</div><div class="good" role="cell"><span class="mark">✓</span>Under a millisecond</div></div>
+      <div class="row" role="row"><div class="q" role="cell">Same answer each time</div><div class="bad" role="cell">No, models vary</div><div class="good" role="cell"><span class="mark">✓</span>Yes, byte for byte</div></div>
+      <div class="row" role="row"><div class="q" role="cell">When the API is down or rate-limited</div><div class="bad" role="cell">Your tests fail</div><div class="good" role="cell"><span class="mark">✓</span>Nothing happens</div></div>
+      <div class="row" role="row"><div class="q" role="cell">API keys in your CI</div><div class="bad" role="cell">Required</div><div class="good" role="cell"><span class="mark">✓</span>Not needed</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="start" aria-labelledby="start-title" style="padding-top:0">
+  <div class="wrap">
+    <h2 id="start-title">Set up in about a minute</h2>
+    <p class="lead">No code changes. The official SDKs, and frameworks built on them like LangChain and the Vercel AI SDK, read their address from an environment variable.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="num" aria-hidden="true">1</div>
+        <div><h3>Start Promptape</h3><p>It runs on your computer and saves recordings in a <code>tapes</code> folder.</p></div>
+<pre><span class="k">$</span> promptape
+<span class="c">◉ promptape  mode=auto
+  listening  http://127.0.0.1:4000</span></pre>
+      </div>
+      <div class="step">
+        <div class="num" aria-hidden="true">2</div>
+        <div><h3>Point your app at it</h3><p>Your real key still works. It's only used while recording.</p></div>
+<pre><span class="k">export</span> OPENAI_BASE_URL=<span class="s">http://127.0.0.1:4000/v1</span>
+<span class="k">export</span> ANTHROPIC_BASE_URL=<span class="s">http://127.0.0.1:4000</span></pre>
+      </div>
+      <div class="step">
+        <div class="num" aria-hidden="true">3</div>
+        <div><h3>Run your tests twice</h3><p>The first run records. Every run after that is free.</p></div>
+<pre><span class="k">$</span> pytest   <span class="c"># first run:  </span><span class="r">RECORD</span><span class="c">  cost $0.43</span>
+<span class="k">$</span> pytest   <span class="c"># every run after: </span><span class="g">REPLAY</span><span class="c">  saved $0.43</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="good-title" style="padding-top:0">
+  <div class="wrap">
+    <h2 id="good-title">Small tool, careful details</h2>
+    <div class="stickers">
+      <div class="sticker"><h3>Your keys stay secret</h3><p>Promptape never writes API keys to disk, so the tapes are safe to commit to git.</p></div>
+      <div class="sticker"><h3>Streaming just works</h3><p>Answers that arrive word by word are recorded and replayed exactly the same way.</p></div>
+      <div class="sticker"><h3>Any language</h3><p>Python, TypeScript, Go, Java: if it can talk to the API, it can talk to Promptape.</p></div>
+      <div class="sticker"><h3>Errors are kept too</h3><p>A real "bad request" is saved so you can test how your app handles it. Rate limits never are.</p></div>
+      <div class="sticker"><h3>A receipt every time</h3><p>It tells you what each call cost, and what each replay saved you.</p></div>
+      <div class="sticker"><h3>Tiny and dependency-free</h3><p>One program, written in Go, nothing else to install. Also ships as a Docker image.</p></div>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="file-title" style="padding-top:0">
+  <div class="wrap tapefile">
+    <div>
+      <h2 id="file-title">A tape is just a file</h2>
+      <p class="lead">One readable file per question, saved next to your tests. Change a prompt, and the pull request shows exactly how the AI's answer changed.</p>
+    </div>
+<pre><span class="c">// tapes/anthropic/claude-opus-5-5-2525.json</span>
+{
+  <span class="s">"request"</span>: {
+    "path": "/v1/messages",
+    "body": {
+      "model": "claude-opus-5-5",
+      "messages": [{ "role": "user", "content": "Summarise this ticket…" }]
+    }
+  },
+  <span class="s">"interactions"</span>: [{
+    "status": 200,
+    "latency_ms": 2412,
+    "body": { "content": [{ "type": "text", "text": "The customer wants…" }] },
+    "usage": { "input_tokens": 1200, "output_tokens": 300 }
+  }]
+}</pre>
+  </div>
+</section>
+
+<section aria-labelledby="modes-title" style="padding-top:0">
+  <div class="wrap">
+    <h2 id="modes-title">Four buttons, like a real tape deck</h2>
+    <p class="lead">You pick one when you start Promptape. Press a button to see what it does.</p>
+    <div class="keys" role="tablist" aria-label="Modes">
+      <button class="key" role="tab" aria-selected="true" data-mode="auto"><span class="sym"><span class="s-dot"></span><span class="s-tri"></span></span><b>auto</b><span>The default</span></button>
+      <button class="key" role="tab" aria-selected="false" data-mode="replay"><span class="sym"><span class="s-tri"></span></span><b>replay</b><span>For CI</span></button>
+      <button class="key" role="tab" aria-selected="false" data-mode="record"><span class="sym"><span class="s-dot"></span></span><b>record</b><span>After a prompt change</span></button>
+      <button class="key" role="tab" aria-selected="false" data-mode="passthrough"><span class="sym"><span class="s-tri ink"></span><span class="s-tri ink"></span></span><b>passthrough</b><span>For debugging</span></button>
+    </div>
+    <div class="mode-panel" role="tabpanel" aria-live="polite">
+      <div><h3 id="mode-h">Replay what's recorded, record what isn't</h3><p id="mode-p">Use it while you build. You pay for each new question once, then it's free.</p></div>
+<pre id="mode-code"><span class="k">$</span> promptape --mode auto</pre>
+    </div>
+  </div>
+</section>
+
+<section class="honest" aria-labelledby="road-title">
+  <div class="wrap">
+    <h2 id="road-title">Honest status</h2>
+    <p class="lead">Promptape is brand new. Here's what works today and what's next.</p>
+    <div class="road">
+      <div class="stop now"><h3>v0.1</h3><span class="when">Available now</span><p>OpenAI and Anthropic, streaming, four modes, secret-safe tapes, cost receipts, Docker. Tested with the official Python and TypeScript SDKs.</p></div>
+      <div class="stop"><h3>v0.5</h3><span class="when">Next</span><p>Gemini, pretend outages and rate limits for testing, pytest and Vitest plugins, a GitHub Action.</p></div>
+      <div class="stop"><h3>v1.0</h3><span class="when">Later</span><p>A free local AI model when you have no API budget, alerts when answers drift, a tape browser.</p></div>
+      <div class="stop"><h3>v2.0</h3><span class="when">Someday</span><p>Pretend tools and MCP servers, so whole AI agents can be tested offline.</p></div>
+    </div>
+    <p class="limits"><strong>Good to know:</strong> replays test your code, not the AI. To check whether the model itself got better or worse, record fresh answers on purpose with <code>--mode record</code>. Gemini's native API, realtime voice APIs and file uploads aren't fully supported yet.</p>
+  </div>
+</section>
+
+<section class="closing" aria-labelledby="end-title">
+  <div class="wrap">
+    <svg class="mini" viewBox="0 0 320 220" aria-hidden="true"><use href="#tapey"/><circle cx="98" cy="118" r="38" fill="#fff" stroke="#17183B" stroke-width="7"/><circle cx="222" cy="118" r="38" fill="#fff" stroke="#17183B" stroke-width="7"/><path d="M78 122 q20 -22 40 0 M202 122 q20 -22 40 0" fill="none" stroke="#17183B" stroke-width="9" stroke-linecap="round"/></svg>
+    <h2 id="end-title">Stop paying twice for the same answer.</h2>
+    <div class="cta-row">
+      <a class="btn primary" href="https://github.com/promptape/promptape">Get Promptape on GitHub</a>
+      <a class="btn second" href="https://github.com/promptape/promptape#quick-start">Read the quick start</a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Promptape is free and open source under the MIT license.</span>
+    <span>Not affiliated with OpenAI or Anthropic.</span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // Copy button
+  document.querySelectorAll("[data-copy]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var ok = function () { btn.textContent = "Copied!"; setTimeout(function () { btn.textContent = "Copy"; }, 1600); };
+      if (navigator.clipboard) navigator.clipboard.writeText(btn.dataset.copy).then(ok, function () { btn.textContent = "Select it"; });
+    });
+  });
+
+  // Tapey's eyes follow the pointer.
+  var mascot = document.getElementById("mascot");
+  var pupils = [document.getElementById("pupil-l"), document.getElementById("pupil-r")];
+  var centers = [[98, 118], [222, 118]];
+  if (!reduce && mascot) {
+    window.addEventListener("pointermove", function (e) {
+      var r = mascot.getBoundingClientRect();
+      var sx = 320 / r.width, sy = 220 / r.height;
+      pupils.forEach(function (p, i) {
+        var cx = r.left + centers[i][0] / sx, cy = r.top + centers[i][1] / sy;
+        var dx = e.clientX - cx, dy = e.clientY - cy, d = Math.hypot(dx, dy) || 1;
+        var m = Math.min(15, d / 12);
+        p.style.transform = "translate(" + (dx / d * m).toFixed(1) + "px," + (dy / d * m).toFixed(1) + "px)";
+      });
+    }, { passive: true });
+  }
+  var lines = ["I'll remember that answer for you.", "Same question? Already on tape.", "That one's free now.", "I never write down your API key."];
+  var li = 0, bubble = document.getElementById("bubble");
+  if (mascot) mascot.addEventListener("click", function () { li = (li + 1) % lines.length; bubble.textContent = lines[li]; });
+
+  // The diagram: first run vs every run after.
+  var runs = {
+    first: { cost: "$0.43", time: "76 s", same: "Not always", net: "Yes",
+      tape: "writes the answer onto a tape", cloud: "answers every call",
+      caption: "The first time, each call really goes to the AI company. Promptape passes the answer back to your test and keeps a copy on tape." },
+    after: { cost: "$0.00", time: "18 ms", same: "Yes, always", net: "No",
+      tape: "plays the answer back from tape", cloud: "never even asked",
+      caption: "From then on, Promptape answers straight from the tape. The AI company is never called, so it's free, instant, and identical every time." }
+  };
+  var stage = document.getElementById("stage"), packet = document.getElementById("packet"), lane = document.getElementById("lane");
+  var cloud = document.getElementById("cloud");
+  var tabs = { first: document.getElementById("tab-first"), after: document.getElementById("tab-after") };
+  var anim = null;
+  function setRun(name) {
+    var r = runs[name];
+    stage.dataset.run = name;
+    stage.setAttribute("aria-labelledby", tabs[name].id);
+    Object.keys(tabs).forEach(function (k) { tabs[k].setAttribute("aria-selected", String(k === name)); tabs[k].tabIndex = k === name ? 0 : -1; });
+    document.getElementById("s-cost").textContent = r.cost;
+    document.getElementById("s-time").textContent = r.time;
+    document.getElementById("s-same").textContent = r.same;
+    document.getElementById("s-net").textContent = r.net;
+    document.getElementById("tape-note").textContent = r.tape;
+    document.getElementById("cloud-note").textContent = r.cloud;
+    document.getElementById("caption").firstChild.textContent = r.caption + " ";
+    cloud.classList.toggle("asleep", name === "after");
+    animate(name);
+  }
+  function animate(name) {
+    if (anim) anim.cancel();
+    if (reduce || !packet.animate) return;
+    var w = lane.clientWidth;
+    var a = w * 0.16 - 13, b = w * 0.5 - 13, c = w * 0.84 - 13;
+    var frames = name === "first"
+      ? [{ transform: "translateX(" + 0 + "px)", opacity: 0, offset: 0 }, { transform: "translateX(0px)", opacity: 1, offset: .05 },
+         { transform: "translateX(" + (b - a) + "px)", offset: .3 }, { transform: "translateX(" + (c - a) + "px)", offset: .5 },
+         { transform: "translateX(" + (b - a) + "px)", offset: .7 }, { transform: "translateX(0px)", opacity: 1, offset: .95 }, { transform: "translateX(0px)", opacity: 0, offset: 1 }]
+      : [{ transform: "translateX(0px)", opacity: 0, offset: 0 }, { transform: "translateX(0px)", opacity: 1, offset: .08 },
+         { transform: "translateX(" + (b - a) + "px)", offset: .45 }, { transform: "translateX(0px)", opacity: 1, offset: .88 }, { transform: "translateX(0px)", opacity: 0, offset: 1 }];
+    anim = packet.animate(frames, { duration: name === "first" ? 3200 : 1100, iterations: Infinity, easing: "ease-in-out" });
+  }
+  tabs.first.addEventListener("click", function () { setRun("first"); });
+  tabs.after.addEventListener("click", function () { setRun("after"); });
+  [tabs.first, tabs.after].forEach(function (t) {
+    t.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowRight" || e.key === "ArrowLeft") { var n = t === tabs.first ? "after" : "first"; setRun(n); tabs[n].focus(); }
+    });
+  });
+  window.addEventListener("resize", function () { animate(stage.dataset.run); });
+  setRun("first");
+
+  // Mode buttons
+  var modes = {
+    auto: ["Replay what's recorded, record what isn't", "Use it while you build. You pay for each new question once, then it's free.", "--mode auto"],
+    replay: ["Never call the API", "Use it in CI. If a test asks something that was never recorded, it fails right away and tells you which tape is missing.", "--mode replay"],
+    record: ["Always call the API and re-record", "Use it after changing a prompt or switching models, to save fresh answers.", "--mode record"],
+    passthrough: ["Just pass calls through", "Nothing is saved, but you still see what every call cost. Handy for debugging.", "--mode passthrough"]
+  };
+  var keys = document.querySelectorAll(".key");
+  keys.forEach(function (k) {
+    k.addEventListener("click", function () {
+      keys.forEach(function (o) { o.setAttribute("aria-selected", String(o === k)); });
+      var m = modes[k.dataset.mode];
+      document.getElementById("mode-h").textContent = m[0];
+      document.getElementById("mode-p").textContent = m[1];
+      document.getElementById("mode-code").innerHTML = '<span class="k">$</span> promptape ' + m[2];
+    });
+  });
+})();
+</script>
+</body>
+</html>

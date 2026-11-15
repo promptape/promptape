@@ -15,6 +15,11 @@ Works with the official OpenAI and Anthropic SDKs, in any language, with one env
 
 </div>
 
+<p align="center">
+  <img src="assets/demo.gif" width="800" alt="Run 1 of a test suite calls the real API and costs $0.43; run 2 replays from tape in 0.31 seconds for $0.00">
+  <br><sub>Illustrative run of a 40-call test suite. <a href="examples/python">Try it yourself in 2 minutes</a>.</sub>
+</p>
+
 ---
 
 Every test that calls a real model **costs money**, **takes seconds**, **returns something slightly different each time** and **fails when the provider is rate-limiting or down**. Mocking by hand means writing fake responses that drift from what the API really returns.
@@ -57,7 +62,7 @@ export OPENAI_BASE_URL=http://127.0.0.1:4000/v1
 export ANTHROPIC_BASE_URL=http://127.0.0.1:4000
 ```
 
-**3. Run your tests twice.** The first run records; the second costs nothing.
+**3. Run your tests twice.** The first run records; the second costs nothing. (No tests handy? [`examples/python`](examples/python) is a ready-made app to try it on.)
 
 ```bash
 pytest            # records real responses into ./tapes

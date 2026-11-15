@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Promptape demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Figtree:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root { --paper:#F4F6FF; --ink:#17183B; --blue:#3340FF; --tomato:#FF5B45; --mint:#2ED19A; --sun:#FFCB3D; }
+* { box-sizing: border-box; }
+html, body { margin: 0; width: 1200px; height: 675px; overflow: hidden; background: var(--paper); font-family: "Figtree", sans-serif; color: var(--ink); }
+.top { display: flex; align-items: center; justify-content: space-between; padding: 26px 40px 0; }
+.brand { display: flex; align-items: center; gap: 12px; font-family: "Bagel Fat One"; font-size: 30px; }
+.brand svg { width: 52px; height: 36px; }
+.badge { font-weight: 800; font-size: 22px; padding: 8px 18px; border-radius: 999px; background: var(--ink); color: #fff; display: flex; align-items: center; gap: 10px; transition: background .3s; }
+.badge i { width: 14px; height: 14px; border-radius: 50%; background: var(--tomato); }
+.badge.play i { border-radius: 0; width: 0; height: 0; background: none; border-left: 14px solid var(--mint); border-top: 8px solid transparent; border-bottom: 8px solid transparent; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; padding: 22px 40px 0; }
+.term { background: var(--ink); border-radius: 18px; height: 440px; padding: 14px 18px; color: #E6E8FF; font: 15px/1.65 "IBM Plex Mono", monospace; overflow: hidden; position: relative; }
+.term .bar { display: flex; gap: 7px; margin-bottom: 10px; align-items: center; }
+.term .bar b { width: 11px; height: 11px; border-radius: 50%; background: #3A3D6E; }
+.term .bar span { margin-left: 8px; font: 700 13px "Figtree"; color: #8B8FC0; }
+.lines div { white-space: pre; }
+.k { color: var(--sun); } .c { color: #8B8FC0; } .r { color: #FF8B7D; } .g { color: var(--mint); } .s { color: #9FD9FF; } .w { color: #fff; font-weight: 500; }
+.bottom { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 22px; padding: 20px 40px 0; }
+.stat { background: #fff; border: 3px solid var(--ink); border-radius: 18px; padding: 8px 18px; display: flex; align-items: baseline; justify-content: space-between; }
+.stat small { font-weight: 800; font-size: 17px; }
+.stat b { font-family: "Bagel Fat One"; font-weight: 400; font-size: 34px; }
+.cursor::after { content: "▌"; color: var(--sun); animation: bl 1s steps(1) infinite; }
+@keyframes bl { 50% { opacity: 0; } }
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="brand"><svg viewBox="0 0 64 44"><rect width="64" height="44" rx="10" fill="#3340FF"/><circle cx="19" cy="20" r="9" fill="#fff"/><circle cx="45" cy="20" r="9" fill="#fff"/><circle cx="19" cy="20" r="4" fill="#17183B"/><circle cx="45" cy="20" r="4" fill="#17183B"/><rect x="24" y="33" width="16" height="5" rx="2.5" fill="#FF5B45"/></svg>promptape</div>
+  <div class="badge" id="badge"><i></i><span id="badge-t">Run 1: calling the real API</span></div>
+</div>
+<div class="grid">
+  <div class="term"><div class="bar"><b></b><b></b><b></b><span>terminal 1 · promptape</span></div><div class="lines" id="t1"></div></div>
+  <div class="term"><div class="bar"><b></b><b></b><b></b><span>terminal 2 · your tests</span></div><div class="lines" id="t2"></div></div>
+</div>
+<div class="bottom">
+  <div class="stat"><small>Spent this run</small><b id="cost">$0.00</b></div>
+  <div class="stat"><small>Test time</small><b id="time">0.0s</b></div>
+  <div class="stat"><small>Same answers</small><b id="same">—</b></div>
+</div>
+<script>
+// Illustrative 40-call suite: claude-opus-5-5, 1,200 input + 300 output tokens per call, list price.
+const t1 = document.getElementById('t1'), t2 = document.getElementById('t2');
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+function add(el, html, max = 15) { const d = document.createElement('div'); d.innerHTML = html; el.appendChild(d); while (el.children.length > max) el.removeChild(el.firstChild); return d; }
+async function type(el, text, prefix = '<span class="k">$</span> ') {
+  const d = add(el, prefix); d.classList.add('cursor');
+  for (const ch of text) { d.innerHTML += ch; await sleep(45); }
+  await sleep(250); d.classList.remove('cursor');
+}
+const names = ['summarise_ticket','classify_intent','extract_invoice','agent_plans_trip','tool_call_weather','json_schema','retry_overload','stream_renders','translate_es','refund_policy'];
+const set = (id, v) => document.getElementById(id).textContent = v;
+(async () => {
+  await sleep(400);
+  await type(t1, 'promptape');
+  add(t1, '<span class="c">◉ promptape v0.1.1  mode=auto</span>');
+  add(t1, '<span class="c">listening  http://127.0.0.1:4000</span>');
+  add(t1, '');
+  await sleep(300);
+  add(t2, '<span class="k">$</span> export ANTHROPIC_BASE_URL=<span class="s">http://127.0.0.1:4000</span>');
+  await sleep(300);
+  await type(t2, 'pytest -q');
+  let cost = 0, time = 0;
+  window.run1 = 0;
+  for (let i = 0; i < 40; i++) {
+    const lat = 1.1 + ((Math.sin(i * 77) + 1) / 2) * 1.9; time += lat; cost += 0.0108;
+    if (i % 4 === 0 || i > 34) add(t1, `<span class="r">RECORD</span> claude-opus-5-5 <span class="c">${lat.toFixed(1)}s</span> cost $0.01`);
+    if (i % 10 === 9) add(t2, `<span class="g">..........</span> <span class="c">[${(i + 1) * 2.5}%]</span>`);
+    set('cost', '$' + cost.toFixed(2)); set('time', time.toFixed(1) + 's');
+    await sleep(90);
+  }
+  add(t2, `<span class="g">40 passed</span> in ${time.toFixed(2)}s`);
+  window.run1 = time;
+  set('same', 'not sure');
+  await sleep(1700);
+  // Run 2
+  document.getElementById('badge').classList.add('play');
+  set('badge-t', 'Run 2: replaying from tape');
+  set('cost', '$0.00'); set('time', '0.0s'); set('same', '—');
+  add(t1, ''); add(t2, '');
+  await type(t2, 'pytest -q');
+  for (let i = 0; i < 40; i++) {
+    if (i % 4 === 0 || i > 34) add(t1, `<span class="g">REPLAY</span> claude-opus-5-5 <span class="c">0.${3 + (i % 5)}ms</span> saved $0.01`);
+    if (i % 10 === 9) add(t2, `<span class="g">..........</span> <span class="c">[${(i + 1) * 2.5}%]</span>`);
+    set('time', (0.008 * (i + 1)).toFixed(2) + 's');
+    await sleep(22);
+  }
+  add(t2, `<span class="g">40 passed</span> in 0.31s`);
+  set('time', '0.31s'); set('same', 'yes, all 40');
+  await sleep(500);
+  add(t2, '');
+  await type(t2, 'promptape report');
+  add(t2, '<span class="w">Every replayed run saves ~$0.43</span>');
+  add(t2, `<span class="w">and ~${Math.round(window.run1)}s of API wait time.</span>`);
+  window.done = true;
+})();
+</script>
+</body>
+</html>

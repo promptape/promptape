@@ -1,0 +1,5 @@
+{
+  "my-finetuned-model": { "input": 3.0, "output": 12.0 },
+  "llama-3.3-70b": { "input": 0.59, "output": 0.79 },
+  "gpt-4o": { "input": 2.5, "output": 10.0, "cache_read": 1.25 }
+}

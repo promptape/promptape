@@ -7,7 +7,11 @@
 A tiny local proxy that makes AI test suites free, instant and deterministic.<br>
 Works with the official OpenAI and Anthropic SDKs, in any language, with one environment variable.
 
-[Quick start](#quick-start) · [How it works](#how-it-works) · [CI](#use-it-in-ci) · [Tapes](#tapes) · [FAQ](#faq)
+[![ci](https://github.com/promptape/promptape/actions/workflows/ci.yml/badge.svg)](https://github.com/promptape/promptape/actions/workflows/ci.yml)
+[![release](https://img.shields.io/github/v/release/promptape/promptape)](https://github.com/promptape/promptape/releases)
+[![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
+**[Website](https://promptape.github.io/promptape/)** · [Quick start](#quick-start) · [How it works](#how-it-works) · [CI](#use-it-in-ci) · [Tapes](#tapes) · [FAQ](#faq)
 
 </div>
 
@@ -42,7 +46,7 @@ your app / tests ──► promptape (localhost:4000) ──► api.openai.com /
 go install github.com/promptape/promptape/cmd/promptape@latest
 # or
 docker run --rm -p 4000:4000 -v "$PWD/tapes:/tapes" --user "$(id -u):$(id -g)" ghcr.io/promptape/promptape
-# or download a binary from the Releases page (Linux, macOS, Windows · amd64/arm64)
+# or download a binary: https://github.com/promptape/promptape/releases (Linux, macOS, Windows · amd64/arm64)
 ```
 
 **2. Start it and point your SDK at it**

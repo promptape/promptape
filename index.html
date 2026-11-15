@@ -140,6 +140,18 @@ section { padding: clamp(64px, 9vw, 120px) 0; }
 .step:nth-child(3) .num { background: var(--mint); color: var(--ink); }
 .step h3 { font-size: 22px; font-weight: 800; line-height: 1.25; }
 .step p { margin: 6px 0 0; color: var(--ink-2); font-size: 17px; }
+.code { position: relative; min-width: 0; }
+.code .cp { position: absolute; top: 10px; right: 10px; border: 0; border-radius: 9px; padding: 6px 12px; font: 700 13px var(--sans); background: #2E3163; color: #E6E8FF; cursor: pointer; }
+.code .cp:hover { background: var(--sun); color: var(--ink); }
+.code pre { padding-right: 84px; }
+[data-os-panel] { position: relative; }
+.os { display: inline-flex; gap: 4px; margin-bottom: 8px; background: #E6E9FF; border-radius: 999px; padding: 4px; }
+.os button { border: 0; border-radius: 999px; padding: 5px 12px; font: 700 13px var(--sans); color: var(--ink-2); background: transparent; cursor: pointer; }
+.os button[aria-pressed="true"] { background: var(--white); color: var(--ink); }
+.out { color: #8B8FC0; }
+.note { display: block; margin-top: 8px; font-size: 14px; color: var(--ink-2); }
+.no-go { margin-top: 14px; font-size: 15px; color: var(--ink-2); }
+.no-go a { font-weight: 700; }
 pre { margin: 0; background: var(--ink); color: #E6E8FF; border-radius: 16px; padding: 16px 18px; font-size: 13.5px; line-height: 1.7; overflow-x: auto; }
 pre .c { color: #8B8FC0; } pre .k { color: var(--sun); } pre .s { color: #9FD9FF; } pre .g { color: var(--mint); } pre .r { color: #FF8B7D; }
 
@@ -209,7 +221,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
   .mascot-stage { max-width: 420px; margin: 0 auto; }
   .stats, .keys, .road { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .step { grid-template-columns: 64px minmax(0, 1fr); }
-  .step pre { grid-column: 1 / -1; }
+  .step .code { grid-column: 1 / -1; }
   .mode-panel { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 700px) {
@@ -222,6 +234,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
   .row .q { grid-column: 1 / -1; padding-bottom: 0; }
   .row.head .q { display: none; }
   .row > div { padding: 12px 16px; }
+  .code pre { padding-right: 18px; padding-top: 48px; }
   .tabs { display: flex; }
   .tab { flex: 1; justify-content: center; padding: 12px 10px; font-size: 15px; }
 }
@@ -286,6 +299,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
         </div>
         <a class="ghost" href="#idea">See how it works</a>
       </div>
+      <p class="no-go">No Go installed? <a href="https://github.com/promptape/promptape/releases/latest">Download Promptape for Mac, Windows or Linux</a>, or <a href="https://github.com/promptape/promptape#quick-start">run it with Docker</a>.</p>
       <p class="small-print">Open source (MIT). One small program, no account, nothing to sign up for.</p>
     </div>
     <div class="mascot-stage">
@@ -363,21 +377,48 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
       <div class="step">
         <div class="num" aria-hidden="true">1</div>
         <div><h3>Start Promptape</h3><p>It runs on your computer and saves recordings in a <code>tapes</code> folder.</p></div>
+<div class="code">
+<button class="cp" type="button" data-copy="promptape">Copy</button>
 <pre><span class="k">$</span> promptape
-<span class="c">◉ promptape  mode=auto
-  listening  http://127.0.0.1:4000</span></pre>
+<span class="out">  ◉ promptape v0.1.1  mode=auto
+
+  listening  http://127.0.0.1:4000
+  tapes      tapes</span></pre>
+<span class="note">Leave this window open. Promptape prints a line for every call it records or replays.</span>
+</div>
       </div>
       <div class="step">
         <div class="num" aria-hidden="true">2</div>
-        <div><h3>Point your app at it</h3><p>Your real key still works. It's only used while recording.</p></div>
+        <div><h3>Point your app at it</h3><p>In a second terminal, where you run your tests. Your real key still works and is only used while recording.</p></div>
+<div class="code">
+<div class="os" role="group" aria-label="Operating system">
+  <button type="button" aria-pressed="true" data-os="unix">macOS / Linux</button>
+  <button type="button" aria-pressed="false" data-os="win">Windows (PowerShell)</button>
+</div>
+<div data-os-panel="unix">
+<button class="cp" type="button" data-copy="export OPENAI_BASE_URL=http://127.0.0.1:4000/v1
+export ANTHROPIC_BASE_URL=http://127.0.0.1:4000">Copy</button>
 <pre><span class="k">export</span> OPENAI_BASE_URL=<span class="s">http://127.0.0.1:4000/v1</span>
 <span class="k">export</span> ANTHROPIC_BASE_URL=<span class="s">http://127.0.0.1:4000</span></pre>
+</div>
+<div data-os-panel="win" hidden>
+<button class="cp" type="button" data-copy='$env:OPENAI_BASE_URL = "http://127.0.0.1:4000/v1"
+$env:ANTHROPIC_BASE_URL = "http://127.0.0.1:4000"'>Copy</button>
+<pre><span class="k">$env:</span>OPENAI_BASE_URL = <span class="s">"http://127.0.0.1:4000/v1"</span>
+<span class="k">$env:</span>ANTHROPIC_BASE_URL = <span class="s">"http://127.0.0.1:4000"</span></pre>
+</div>
+</div>
       </div>
       <div class="step">
         <div class="num" aria-hidden="true">3</div>
-        <div><h3>Run your tests twice</h3><p>The first run records. Every run after that is free.</p></div>
-<pre><span class="k">$</span> pytest   <span class="c"># first run:  </span><span class="r">RECORD</span><span class="c">  cost $0.43</span>
-<span class="k">$</span> pytest   <span class="c"># every run after: </span><span class="g">REPLAY</span><span class="c">  saved $0.43</span></pre>
+        <div><h3>Run your tests twice</h3><p>Use your usual test command. The first run records, every run after that is free. Then ask Promptape what you saved.</p></div>
+<div class="code">
+<button class="cp" type="button" data-copy="pytest">Copy</button>
+<pre><span class="k">$</span> pytest              <span class="c"># or npm test, go test…</span>
+<span class="k">$</span> pytest              <span class="c"># same command, now from tape</span>
+<span class="k">$</span> promptape report    <span class="c"># what a live run would cost</span></pre>
+<span class="note">In the Promptape window, the first run shows <b style="color:#E0402C">RECORD</b> lines with what each call cost, and every run after shows <b style="color:#0E8F63">REPLAY</b> lines with what each one saved.</span>
+</div>
       </div>
     </div>
   </div>
@@ -403,7 +444,8 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
       <h2 id="file-title">A tape is just a file</h2>
       <p class="lead">One readable file per question, saved next to your tests. Change a prompt, and the pull request shows exactly how the AI's answer changed.</p>
     </div>
-<pre><span class="c">// tapes/anthropic/claude-opus-5-5-2525.json</span>
+<pre><span class="c">// tapes/anthropic/claude-opus-5-5-252590dd6997.json
+// (shortened example: real tapes also keep headers and streamed events)</span>
 {
   <span class="s">"request"</span>: {
     "path": "/v1/messages",
@@ -434,7 +476,10 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
     </div>
     <div class="mode-panel" role="tabpanel" aria-live="polite">
       <div><h3 id="mode-h">Replay what's recorded, record what isn't</h3><p id="mode-p">Use it while you build. You pay for each new question once, then it's free.</p></div>
+<div class="code">
+<button class="cp" type="button" id="mode-copy" data-copy="promptape --mode auto">Copy</button>
 <pre id="mode-code"><span class="k">$</span> promptape --mode auto</pre>
+</div>
     </div>
   </div>
 </section>
@@ -481,6 +526,15 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
     btn.addEventListener("click", function () {
       var ok = function () { btn.textContent = "Copied!"; setTimeout(function () { btn.textContent = "Copy"; }, 1600); };
       if (navigator.clipboard) navigator.clipboard.writeText(btn.dataset.copy).then(ok, function () { btn.textContent = "Select it"; });
+    });
+  });
+
+  // macOS/Linux vs Windows commands
+  document.querySelectorAll("[data-os]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var box = b.closest(".code");
+      box.querySelectorAll("[data-os]").forEach(function (o) { o.setAttribute("aria-pressed", String(o === b)); });
+      box.querySelectorAll("[data-os-panel]").forEach(function (p) { p.hidden = p.dataset.osPanel !== b.dataset.os; });
     });
   });
 
@@ -570,6 +624,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
       document.getElementById("mode-h").textContent = m[0];
       document.getElementById("mode-p").textContent = m[1];
       document.getElementById("mode-code").innerHTML = '<span class="k">$</span> promptape ' + m[2];
+      document.getElementById("mode-copy").dataset.copy = "promptape " + m[2];
     });
   });
 })();
